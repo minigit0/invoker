@@ -5,23 +5,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Unpack project
+        run: |
+          unzip -oq project.zip -d _unz
+          cp -r _unz/invoker-mod/. .
+          find src -type f
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
-      - name: Подобрать актуальные версии Fabric
-        run: |
-          MC=1.21.11
-          YARN=$(curl -s https://meta.fabricmc.net/v2/versions/yarn/$MC | jq -r '.[0].version')
-          LOADER=$(curl -s https://meta.fabricmc.net/v2/versions/loader | jq -r '[.[]|select(.stable)][0].version')
-          API=$(curl -s https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml | grep -o "<version>[^<]*+$MC</version>" | sed 's/<[^>]*>//g' | tail -1)
-          echo "yarn=$YARN loader=$LOADER api=$API"
-          sed -i "s|^yarn_mappings=.*|yarn_mappings=$YARN|; s|^loader_version=.*|loader_version=$LOADER|; s|^fabric_version=.*|fabric_version=$API|" gradle.properties
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: current
+          gradle-version: 9.2.1
       - run: gradle build
       - uses: actions/upload-artifact@v4
         with:
           name: invoker-mod
-          path: build/libs/*[0-9].jar
+          path: build/libs/*.jar
